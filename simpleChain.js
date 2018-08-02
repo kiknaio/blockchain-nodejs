@@ -1,8 +1,7 @@
 const level = require('level');
 const SHA256 = require('crypto-js/sha256');
 const to = require('to2');
-const log = level('log.db');
-
+const log = level('log.db', { valueEncoding: 'json' });
 
 class Block {
   constructor(data) {
@@ -30,7 +29,7 @@ class Blockchain {
 
     newBlock.hash = SHA256(newBlock).toString();
 
-    log.put(newBlock.height, JSON.stringify(newBlock), err => {
+    log.put(newBlock.height, newBlock, err => {
       if (err) return console.error(err);
     });
   }
@@ -107,7 +106,7 @@ class Blockchain {
 
 const blockchain = new Blockchain();
 
-
+// Values should not be returned. Make no sense to return, logging is enought
 
 // TODO: Genesis block persist as the first block in the blockchain using LevelDB
 
