@@ -20,10 +20,15 @@ class Blockchain {
 
   addBlock(newBlock) {
 	// TODO: get height
-    newBlock.height = this.getBlockchainHeight();
+		let height = 0;
+    log.createReadStream().on('data', () => {
+      height++;
+    });
+
+    newBlock.height = height; 
     newBlock.time = new Date().getTime().toString().slice(0, -3);
 
-    if (newBlock.height > 0) {
+    if (newBlock.height > 1) {
       newBlock.previousBlockHash = this.getBlock(newBlock.height - 1).hash;
     }
 
@@ -32,15 +37,13 @@ class Blockchain {
     log.put(newBlock.height, newBlock, err => {
       if (err) return console.error(err);
     });
-  }
-  
+  } 
 
   getBlockchainHeight() {
     let height = 0;
-    log.createReadStream().on('data', () => {
+    log.createReadStream().on('data', data => {
       height++;
-    });
-    return height;
+    }).on('end', () => console.log(height))
   }
 
   // get block
@@ -48,11 +51,12 @@ class Blockchain {
     let height = 0;
     log.createReadStream()
 		.pipe(to.obj((row, enc, next) => {
-      		if (blockHeight === parseInt(row.key)) {
-        		return console.log(row);
-      		}
-      		height++;
-    		}))
+   		if (blockHeight === height) {
+      	return console.log(row);
+      }
+      height++;
+			next();
+    }))
   }
 
   // validate block
@@ -117,10 +121,10 @@ const blockchain = new Blockchain();
 // TODO: validateChain() function to validate blockchain stored within levelDB
 
 // TODO: getBlock() function retrieves a block by block heigh within the LevelDB chain.
-// console.log(blockchain.getBlock(0));
+blockchain.getBlock(0);
 
 // TODO: getBlockHeight() function retrieves current block height within the LevelDB chain.
-// console.log(blockchain.getBlockchainHeight());
+// blockchain.getBlockchainHeight();
 
 // TODO: get list of all blocks
-blockchain.list();
+// blockchain.list();
