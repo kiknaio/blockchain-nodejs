@@ -45,7 +45,6 @@ class Blockchain {
           const previousBlock = await this.getBlock(newBlock.height - 1);
           newBlock.previousBlockHash = previousBlock.hash;
         }
-
         newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
 
         log.put(newBlock.height, newBlock, err => {
@@ -58,10 +57,6 @@ class Blockchain {
       });
   }
 
-
-  // ==================================
-  // =========== GET BLOCK ============
-  // ==================================
   async getBlockHeight() {
     let height = 0;
     return new Promise((resolve, reject) => {
@@ -82,21 +77,38 @@ class Blockchain {
 
   // validate block
   validateBlock(blockHeight) {
-    // get block object
-    let block = this.getBlock(blockHeight);
-    // get block hash
-    let blockHash = block.hash;
-    // remove block hash to test block integrity
-    block.hash = '';
-    // generate block hash
-    let validBlockHash = SHA256(JSON.stringify(block)).toString();
-    // Compare
-    if (blockHash === validBlockHash) {
-      return true;
-    } else {
-      console.log('Block #' + blockHeight + ' invalid hash:\n' + blockHash + '<>' + validBlockHash);
-      return false;
-    }
+    log.get(blockHeight, (err, block) => {
+      if(err) return console.error(err);
+      const blockHash = block.hash;
+      block.hash = '';
+      const validateBlockHash = SHA256(JSON.stringify(block)).toString();
+
+      if (blockHash === validateBlockHash) {
+        console.log(`Block #${blockHeight} is valid block`);
+        return true;
+      } else {
+        console.log('Block #' + blockHeight + ' invalid hash:\n' + blockHash + '<>' + validBlockHash);
+        return false;
+      }
+
+    })
+
+
+    // // get block object
+    // let block = this.getBlock(blockHeight);
+    // // get block hash
+    // let blockHash = block.hash;
+    // // remove block hash to test block integrity
+    // block.hash = '';
+    // // generate block hash
+    // let validBlockHash = SHA256(JSON.stringify(block)).toString();
+    // // Compare
+    // if (blockHash === validBlockHash) {
+    //   return true;
+    // } else {
+    //   console.log('Block #' + blockHeight + ' invalid hash:\n' + blockHash + '<>' + validBlockHash);
+    //   return false;
+    // }
   }
 
   // Validate blockchain
@@ -131,15 +143,14 @@ class Blockchain {
 
 const blockchain = new Blockchain();
 
-
-
-// TODO: Genesis block persist as the first block in the blockchain using LevelDB
-
-// TODO: addblock() save into levelDB
+// Create new block
 // blockchain.addBlock('Luka Kiknadze');
+
 // TODO: validateBlock() function to validate a block stored within levelDB
+// blockchain.validateBlock(1);
 
 // TODO: validateChain() function to validate blockchain stored within levelDB
+blockchain.validateChain();
 
 // List blocks
 // blockchain.list();
