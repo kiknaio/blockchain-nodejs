@@ -93,43 +93,32 @@ class Blockchain {
 
     })
 
-
-    // // get block object
-    // let block = this.getBlock(blockHeight);
-    // // get block hash
-    // let blockHash = block.hash;
-    // // remove block hash to test block integrity
-    // block.hash = '';
-    // // generate block hash
-    // let validBlockHash = SHA256(JSON.stringify(block)).toString();
-    // // Compare
-    // if (blockHash === validBlockHash) {
-    //   return true;
-    // } else {
-    //   console.log('Block #' + blockHeight + ' invalid hash:\n' + blockHash + '<>' + validBlockHash);
-    //   return false;
-    // }
   }
 
-  // Validate blockchain
   validateChain() {
-    let errorLog = [];
-    for (var i = 0; i < this.chain.length - 1; i++) {
-      // validate block
-      if (!this.validateBlock(i)) errorLog.push(i);
-      // compare blocks hash link
-      let blockHash = this.chain[i].hash;
-      let previousHash = this.chain[i + 1].previousBlockHash;
-      if (blockHash !== previousHash) {
-        errorLog.push(i);
-      }
-    }
-    if (errorLog.length > 0) {
-      console.log('Block errors = ' + errorLog.length);
-      console.log('Blocks: ' + errorLog);
-    } else {
-      console.log('No errors detected');
-    }
+    const errorLog = [];
+
+    log.createReadStream()
+      .on('data', async block => {
+        if(block.value.height > 0) {
+          // Validate block
+          if(this.validateBlock(block.value.height)) errorLog.push(block.value.height);
+
+          // Check DAG
+          const previousBlock = await this.getBlock(block.value.height - 1);
+          const previousBlockHash = previousBlock.hash;
+          if(previousBlockHash !== block.value.previousBlockHash) {
+            errorLog.push(block.value.height - 1);
+          }
+        }
+      }).on('close', () => {
+        if (errorLog.length > 0) {
+          console.log('Error in blocks', errorLog)
+        } else {
+          console.log(boxen('Congratulations! Blockchain is valid', { padding: 1 }))
+        }
+      })
+
   }
 
   list() {
@@ -143,22 +132,22 @@ class Blockchain {
 
 const blockchain = new Blockchain();
 
-// Create new block
+// === Create new block ===
 // blockchain.addBlock('Luka Kiknadze');
 
-// TODO: validateBlock() function to validate a block stored within levelDB
+// === Validate block ===
 // blockchain.validateBlock(1);
 
-// TODO: validateChain() function to validate blockchain stored within levelDB
-blockchain.validateChain();
+// === Validate chainz of blockz 🥕 ===
+// blockchain.validateChain();
 
-// List blocks
+// === List blocks ===
 // blockchain.list();
 
-// GET Block
+// === GET Block ===
 // (async () =>
 //   console.log(await blockchain.getBlock(0)))()
 
-// GET Blockchain length
+// === GET Blockchain length ===
 // (async () =>
 //   console.log(await blockchain.getBlockHeight()))();
