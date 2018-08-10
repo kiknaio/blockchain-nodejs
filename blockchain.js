@@ -7,10 +7,10 @@ const log = level('log.db', { valueEncoding: 'json' });
 class Block {
   constructor(data) {
     this.hash = "",
-    this.height = 0,
-    this.body = data,
-    this.time = Date.now(),
-    this.previousBlockHash = ""
+      this.height = 0,
+      this.body = data,
+      this.time = Date.now(),
+      this.previousBlockHash = ""
   }
 }
 
@@ -119,13 +119,13 @@ class Blockchain {
     }
   }
 
-	list() {
+  list() {
     log.createReadStream()
       .pipe(to.obj((row, enc, next) => {
-          console.log(row);
-          next();
+        console.log(row);
+        next();
       }))
-	}
+  }
 }
 
 const blockchain = new Blockchain();
