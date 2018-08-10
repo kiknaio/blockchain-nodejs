@@ -1,16 +1,17 @@
 const level = require('level');
 const SHA256 = require('crypto-js/sha256');
 const to = require('to2');
+const boxen = require('boxen');
 const log = level('log.db', { valueEncoding: 'json' });
 
 
 class Block {
   constructor(data) {
     this.hash = "",
-      this.height = 0,
-      this.body = data,
-      this.time = Date.now(),
-      this.previousBlockHash = ""
+    this.height = 0,
+    this.body = data,
+    this.time = Date.now(),
+    this.previousBlockHash = ""
   }
 }
 
@@ -21,14 +22,14 @@ class Blockchain {
       .on('data', () => height++)
       .on('close', () => {
         if (height === 0) {
-          console.log('Genesis block created');
-          this.addBlock(new Block("Genesis block"));
+          console.log(boxen('Genesis block created', { padding: 1}));
+          this.addBlock("Genesis block");
         }
       })
   }
 
   async addBlock(data) {
-    const newBlock = {};
+    const newBlock = new Block(data);
     let height = 0;
 
     newBlock.time = new Date().getTime().toString().slice(0, -3);
@@ -135,20 +136,18 @@ const blockchain = new Blockchain();
 // TODO: Genesis block persist as the first block in the blockchain using LevelDB
 
 // TODO: addblock() save into levelDB
-// blockchain.addBlock('giorgi kiknadze');
+// blockchain.addBlock('Luka Kiknadze');
 // TODO: validateBlock() function to validate a block stored within levelDB
 
 // TODO: validateChain() function to validate blockchain stored within levelDB
+
+// List blocks
+// blockchain.list();
 
 // GET Block
 // (async () =>
 //   console.log(await blockchain.getBlock(0)))()
 
-// TODO: getBlockHeight() function retrieves current block height within the LevelDB chain.
-(async () =>
-  console.log(await blockchain.getBlockHeight()))();
-
-// TODO: get list of all blocks
-// blockchain.list();
-
-// console.log(blockchain.getBlockHeight());
+// GET Blockchain length
+// (async () =>
+//   console.log(await blockchain.getBlockHeight()))();
