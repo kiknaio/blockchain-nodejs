@@ -83,7 +83,7 @@ class Blockchain {
         console.log(`Block #${blockHeight} is valid block`);
         return true;
       } else {
-        console.log('Block #' + blockHeight + ' invalid hash:\n' + blockHash + '<>' + validBlockHash);
+        console.log('Block #' + blockHeight + ' invalid hash:\n' + blockHash + '<>' + validateBlockHash);
         return false;
       }
 
@@ -91,45 +91,56 @@ class Blockchain {
 
   }
 
-  validateChain() {
+  async validateChain() {
+    const height = await this.getBlockHeight();
     const errorLog = [];
 
-    log.createReadStream()
-      .on('data', async block => {
-        if(block.value.height > 0) {
-          // Validate block
-          if(this.validateBlock(block.value.height)) errorLog.push(block.value.height);
-
-          // Check DAG
-          const previousBlock = await this.getBlock(block.value.height - 1);
-          const previousBlockHash = previousBlock.hash;
-          if(previousBlockHash !== block.value.previousBlockHash) {
-            errorLog.push(block.value.height - 1);
-          }
-        }
-      }).on('close', () => {
-        if (errorLog.length > 0) {
-          console.log('Error in blocks', errorLog)
-        } else {
-          console.log(boxen('Congratulations! Blockchain is valid', { padding: 1 }))
-        }
+    for (let i=0; i < height; i++) {
+      log.get(i, (err, block) => {
+        if (err) return console.error(err);
+        console.log(block)
       })
+    }
+
+    // log.createReadStream()
+    //   .on('data', async block => {
+    //     if(block.value.height > 0) {
+    //       // Validate block
+    //       if(this.validateBlock(block.value.height)) errorLog.push(block.value.height);
+    //
+    //       // Check DAG
+    //       const previousBlock = await this.getBlock(block.value.height - 1);
+    //       const previousBlockHash = previousBlock.hash;
+    //       if(previousBlockHash !== block.value.previousBlockHash) {
+    //         errorLog.push(block.value.height - 1);
+    //       }
+    //     }
+    //   }).on('close', () => {
+    //     if (errorLog.length > 0) {
+    //       console.log('Error in blocks', errorLog)
+    //     } else {
+    //       console.log(boxen('Congratulations! Blockchain is valid', { padding: 1 }))
+    //     }
+    //   })
 
   }
 
-  list() {
-    log.createReadStream()
-      .pipe(to.obj((row, enc, next) => {
-        console.log(row);
-        next();
-      }))
+  async list() {
+    const height = await this.getBlockHeight();
+
+    for (let i=0; i < height; i++) {
+      log.get(i, (err, block) => {
+        if (err) return console.error(err);
+        console.log(block)
+      })
+    }
   }
 }
 
 const blockchain = new Blockchain();
 
 // === Create new block ===
-blockchain.addBlock('Luka Kiknadze');
+// blockchain.addBlock('Luka Kiknadze');
 
 // === Validate block ===
 // blockchain.validateBlock(1);
