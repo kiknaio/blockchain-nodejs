@@ -36,28 +36,24 @@ class Blockchain {
     newBlock.body = data;
 
     // Get height
-    log.createReadStream()
-      .on('data', () => height++)
-      .on('close', async () => {
-        newBlock.height = height;
+    newBlock.height = await this.getBlockHeight();
 
-        if (newBlock.height > 0) {
-          const previousBlock = await this.getBlock(newBlock.height - 1);
-          newBlock.previousBlockHash = previousBlock.hash;
-        }
-        newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+    if (newBlock.height > 0) {
+      const previousBlock = await this.getBlock(newBlock.height - 1);
+      newBlock.previousBlockHash = previousBlock.hash;
+    }
+    newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
 
-        log.put(newBlock.height, newBlock, err => {
-          if (err) return console.error(err);
-          log.get(newBlock.height, (err, result) => {
-            if(err) return console.error(err);
-            console.log(result);
-          })
-        });
-      });
+    log.put(newBlock.height, newBlock, err => {
+      if (err) return console.error(err);
+      log.get(newBlock.height, (err, result) => {
+        if(err) return console.error(err);
+        console.log(result);
+      })
+    });
   }
 
-  async getBlockHeight() {
+  getBlockHeight() {
     let height = 0;
     return new Promise((resolve, reject) => {
       log.createReadStream()
@@ -133,7 +129,7 @@ class Blockchain {
 const blockchain = new Blockchain();
 
 // === Create new block ===
-// blockchain.addBlock('Luka Kiknadze');
+blockchain.addBlock('Luka Kiknadze');
 
 // === Validate block ===
 // blockchain.validateBlock(1);
