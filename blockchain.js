@@ -73,56 +73,43 @@ class Blockchain {
 
   // validate block
   validateBlock(blockHeight) {
-    log.get(blockHeight, (err, block) => {
-      if(err) return console.error(err);
-      const blockHash = block.hash;
-      block.hash = '';
-      const validateBlockHash = SHA256(JSON.stringify(block)).toString();
+    return new Promise(((resolve, reject) => {
+      log.get(blockHeight, (err, block) => {
+        if(err) return console.error(err);
+        const blockHash = block.hash;
+        block.hash = '';
+        const validateBlockHash = SHA256(JSON.stringify(block)).toString();
 
-      if (blockHash === validateBlockHash) {
-        console.log(`Block #${blockHeight} is valid block`);
-        return true;
-      } else {
-        console.log('Block #' + blockHeight + ' invalid hash:\n' + blockHash + '<>' + validateBlockHash);
-        return false;
-      }
-
-    })
-
+        if (blockHash === validateBlockHash) {
+          console.log(`Block #${blockHeight} is valid block`);
+          resolve(true);
+        } else {
+          console.log('Block #' + blockHeight + ' invalid hash:\n' + blockHash + ' <-> ' + validateBlockHash);
+          resolve(false);
+        }
+      })
+    }))
   }
 
   async validateChain() {
     const height = await this.getBlockHeight();
-    const errorLog = [];
 
     for (let i=0; i < height; i++) {
-      log.get(i, (err, block) => {
+      log.get(i, async (err, block) => {
         if (err) return console.error(err);
-        console.log(block)
+        // Invoke validateBlock function to check validity of the block
+        await this.validateBlock(block.height);
+
+        if (i+1 < height) {
+          log.get(i+1, (err, nextBlock) => {
+            if (err) return console.error(err);
+              if (block.hash !== nextBlock.previousBlockHash) {
+                console.log(`Block #${block.height} and Block #${nextBlock.height} link is invalid`)
+              }
+          })
+        }
       })
     }
-
-    // log.createReadStream()
-    //   .on('data', async block => {
-    //     if(block.value.height > 0) {
-    //       // Validate block
-    //       if(this.validateBlock(block.value.height)) errorLog.push(block.value.height);
-    //
-    //       // Check DAG
-    //       const previousBlock = await this.getBlock(block.value.height - 1);
-    //       const previousBlockHash = previousBlock.hash;
-    //       if(previousBlockHash !== block.value.previousBlockHash) {
-    //         errorLog.push(block.value.height - 1);
-    //       }
-    //     }
-    //   }).on('close', () => {
-    //     if (errorLog.length > 0) {
-    //       console.log('Error in blocks', errorLog)
-    //     } else {
-    //       console.log(boxen('Congratulations! Blockchain is valid', { padding: 1 }))
-    //     }
-    //   })
-
   }
 
   async list() {
@@ -143,10 +130,10 @@ const blockchain = new Blockchain();
 // blockchain.addBlock('Luka Kiknadze');
 
 // === Validate block ===
-// blockchain.validateBlock(1);
+// blockchain.validateBlock(2);
 
 // === Validate chainz of blockz 🥕 ===
-// blockchain.validateChain();
+blockchain.validateChain();
 
 // === List blocks ===
 // blockchain.list();
