@@ -4,9 +4,9 @@ const to = require('to2');
 const boxen = require('boxen');
 const log = level('log.db', { valueEncoding: 'json' });
 
-const logGet = (thing, cb) => new Promise(resolve => {
-  log.get(thing, (...args) => { cb(...args); resolve(); });
-})
+const logGet = (thing, cb) => new Promise(resolve =>
+  log.get(thing, (...args) => cb(...args, resolve))
+)
 
 class Block {
   constructor(data) {
@@ -77,7 +77,7 @@ class Blockchain {
   // validate block
   validateBlock(blockHeight) {
     return new Promise((resolve, reject) => {
-      return log.get(blockHeight, (err, block) => {
+      logGet(blockHeight, (err, block) => {
         if(err) reject(console.error(err));
         const blockHash = block.hash;
         block.hash = '';
@@ -95,43 +95,48 @@ class Blockchain {
   }
 
   async validateChain() {
-    let errorLog = [];
+    let isBlockchainValid = true;
     const height = await this.getBlockHeight();
+    const errorLog = [];
   
     const reportError = errorBlock => errorLog.push(errorBlock);
-    const logGet = (thing, cb) => new Promise(resolve => {
-      log.get(thing, (...args) => { cb(...args); resolve(); });
-    })
 
     for (let i=0; i < height; i++) {
-      await logGet(i, async (err, block) => {
+      await logGet(i, async (err, block, done) => {
         if (err) return console.error(err);
 
         // Invoke validateBlock function to check validity of the block
         const isBlockValid = await this.validateBlock(block.height);
+        
 
         // Check if blockchain is valid
         if (!isBlockValid) {
-          reportError(block)
+          reportError(block);
         }
 
         // Check validity of the links between blocks
         if (i+1 < height) {
-          await logGet(i+1, (err, nextBlock) => {
+          await logGet(i+1, (err, nextBlock, d) => {
             if (err) return console.error(err);
             if (block.hash !== nextBlock.previousBlockHash) {
               reportError(block)
               console.log(`Block #${block.height} and Block #${nextBlock.height} link is invalid`)
             }
+            // es chavucere
+            d();
           })
         }
+        
+        done();
       })
     }
-
+    
     if (errorLog.length > 0) {
-      console.log('Blockchain is invalid');
+      console.log(boxen('Blockchain is invalid', { padding: 1 }));
+      console.log('=== Corrupted Blocks ===');
+      console.log(errorLog);
     } else {
-      console.log('Blockchain is valid');
+      console.log(boxen('Blockchain is valid', { padding: 1 }));
     }
   }
 
@@ -150,13 +155,13 @@ class Blockchain {
 const blockchain = new Blockchain();
 
 // === Create new block ===
-// blockchain.addBlock('Luka Kiknadze');
+// blockchain.addBlock('test');
 
 // === Validate block ===
 // blockchain.validateBlock(2);
 
 // === Validate chainz of blockz 🥕 ===
-blockchain.validateChain();
+// blockchain.validateChain();
 
 // === List blocks ===
 // blockchain.list();
