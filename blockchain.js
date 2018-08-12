@@ -4,6 +4,9 @@ const to = require('to2');
 const boxen = require('boxen');
 const log = level('log.db', { valueEncoding: 'json' });
 
+const logGet = (thing, cb) => new Promise(resolve => {
+  log.get(thing, (...args) => { cb(...args); resolve(); });
+})
 
 class Block {
   constructor(data) {
@@ -73,9 +76,9 @@ class Blockchain {
 
   // validate block
   validateBlock(blockHeight) {
-    return new Promise(((resolve, reject) => {
-      log.get(blockHeight, (err, block) => {
-        if(err) return console.error(err);
+    return new Promise((resolve, reject) => {
+      return log.get(blockHeight, (err, block) => {
+        if(err) reject(console.error(err));
         const blockHash = block.hash;
         block.hash = '';
         const validateBlockHash = SHA256(JSON.stringify(block)).toString();
@@ -88,27 +91,47 @@ class Blockchain {
           resolve(false);
         }
       })
-    }))
+    })
   }
 
   async validateChain() {
+    let errorLog = [];
     const height = await this.getBlockHeight();
+  
+    const reportError = errorBlock => errorLog.push(errorBlock);
+    const logGet = (thing, cb) => new Promise(resolve => {
+      log.get(thing, (...args) => { cb(...args); resolve(); });
+    })
 
     for (let i=0; i < height; i++) {
-      log.get(i, async (err, block) => {
+      await logGet(i, async (err, block) => {
         if (err) return console.error(err);
-        // Invoke validateBlock function to check validity of the block
-        await this.validateBlock(block.height);
 
+        // Invoke validateBlock function to check validity of the block
+        const isBlockValid = await this.validateBlock(block.height);
+
+        // Check if blockchain is valid
+        if (!isBlockValid) {
+          reportError(block)
+        }
+
+        // Check validity of the links between blocks
         if (i+1 < height) {
-          log.get(i+1, (err, nextBlock) => {
+          await logGet(i+1, (err, nextBlock) => {
             if (err) return console.error(err);
-              if (block.hash !== nextBlock.previousBlockHash) {
-                console.log(`Block #${block.height} and Block #${nextBlock.height} link is invalid`)
-              }
+            if (block.hash !== nextBlock.previousBlockHash) {
+              reportError(block)
+              console.log(`Block #${block.height} and Block #${nextBlock.height} link is invalid`)
+            }
           })
         }
       })
+    }
+
+    if (errorLog.length > 0) {
+      console.log('Blockchain is invalid');
+    } else {
+      console.log('Blockchain is valid');
     }
   }
 
