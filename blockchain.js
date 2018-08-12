@@ -161,7 +161,7 @@ const blockchain = new Blockchain();
 // blockchain.validateBlock(2);
 
 // === Validate chainz of blockz 🥕 ===
-blockchain.validateChain();
+// blockchain.validateChain();
 
 // === List blocks ===
 // blockchain.list();
