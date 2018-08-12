@@ -116,14 +116,13 @@ class Blockchain {
 
         // Check validity of the links between blocks
         if (i+1 < height) {
-          await logGet(i+1, (err, nextBlock, d) => {
+          await logGet(i+1, (err, nextBlock, finish) => {
             if (err) return console.error(err);
             if (block.hash !== nextBlock.previousBlockHash) {
               reportError(block)
               console.log(`Block #${block.height} and Block #${nextBlock.height} link is invalid`)
             }
-            // es chavucere
-            d();
+            finish();
           })
         }
         
