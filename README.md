@@ -7,8 +7,8 @@ Libraries used:
 - crypto-js - used for hashing
 
 
-**Bugs to fix:**
+**🐛Bugs to fix:**
 
-[ ] - If users is invoking `addblock()` function, and there is no any existing data, Genesis block will be the second block and `addBlock()` generated block will be the first.
+- [ ] If users is invoking `addblock()` function, and there is no any existing data, Genesis block will be the second block and `addBlock()` generated block will be the first.
 
 
