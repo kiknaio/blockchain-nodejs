@@ -7,8 +7,36 @@ Libraries used:
 - crypto-js - used for hashing
 
 
-**Bugs to fix: 🐛**
-
-- [ ] If users is invoking `addblock()` function, and there is no any existing data, Genesis block will be the second block and `addBlock()` generated block will be the first.
 
 
+- === Create new block ===
+```
+blockchain.addBlock('test');
+```
+
+- === Validate block ===
+```
+blockchain.validateBlock(2);
+```
+
+- === Validate chainz of blockz 🥕 ===
+```
+blockchain.validateChain();
+```
+
+- === List blocks ===
+```
+blockchain.list();
+```
+
+- === GET Block ===
+```
+(async () =>
+  console.log(await blockchain.getBlock(5)))()
+```
+
+- === GET Blockchain length ===
+```
+(async () =>
+  console.log(await blockchain.getBlockHeight()))();
+```
